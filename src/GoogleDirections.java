@@ -41,7 +41,7 @@ public class GoogleDirections {
         try {
 
             PrintWriter pw = new PrintWriter(new FileWriter("outputTrips.csv", false));
-            pw.println("id,from,stop1,stop2,stop3,destination,distance");
+            pw.println("id,from,stop1,stop2,stop3,destination,distance,steps");
 
 
             BufferedReader in = new BufferedReader(new FileReader("inputTrips.csv"));
@@ -105,33 +105,41 @@ public class GoogleDirections {
                         stop3 + "," +
                         destination + ",");
 
-                DateTime startTime = new DateTime(2017, month, day, hour, minute, 0);
+                DateTime startTime = new DateTime(2017, month, day, hour , minute , 0);
+                //adapt to new time zone?
+                startTime.minusMinutes(3*60+30);
 
                 int tripDuration = 0;
                 long totalDistance = 0;
+                String legSteps = "";
 
                 for (int segment = 0; segment < sequence; segment++) {
+
                     String fromLocation = completeRoute.get(segment);
                     String toLocation = completeRoute.get(segment + 1);
-                    //update starting time for the second segment
+
+                    //update starting time for the second segment and successives
                     startTime.plusSeconds(tripDuration);
 
                     DirectionsResult directionsResult = dq.getResult(fromLocation, toLocation, startTime);
 
-                    //logger.info("There is (are) " + directionsResult.routes.length + " different route(s)");
+
                     for (int k = 0; k < directionsResult.routes.length; k++) {
+                        //only 1 route in general
 
                         for (int j = 0; j < directionsResult.routes[k].legs.length; j++) {
-                            //logger.info(directionsResult.routes[k].legs[j].departureTime);
+                            //only 1 leg when using transit
+
 
                             for (int i = 0; i < directionsResult.routes[k].legs[j].steps.length; i++) {
-                                //logger.info("route " + k + " leg " + j + " step " + i);
-                                //logger.info(directionsResult.routes[k].legs[j].steps[i].travelMode);
-                                //logger.info(directionsResult.routes[k].legs[j].steps[i].startLocation);
-                                //logger.info(directionsResult.routes[k].legs[j].steps[i].endLocation);
-                                //logger.info(directionsResult.routes[k].legs[j].steps[i].distance);
-
+                                //legSteps += "WITH";
+                                //legSteps += directionsResult.routes[k].legs[j].steps[i].travelMode.toString();
+                                //steps = transit lines or transit + walking segments
                                 if (directionsResult.routes[k].legs[j].steps[i].travelMode.equals(TravelMode.TRANSIT)) {
+                                    legSteps += "FROM";
+                                    legSteps += directionsResult.routes[k].legs[j].steps[i].transitDetails.departureStop.name;
+                                    legSteps += "TO";
+                                    legSteps += directionsResult.routes[k].legs[j].steps[i].transitDetails.arrivalStop.name;
                                     //logger.info(directionsResult.routes[k].legs[j].steps[i].transitDetails.departureStop.name);
                                     //logger.info(directionsResult.routes[k].legs[j].steps[i].transitDetails.arrivalStop.name);
                                     ///logger.info(directionsResult.routes[k].legs[j].steps[i].transitDetails.line.shortName);
@@ -145,7 +153,7 @@ public class GoogleDirections {
 
                     }
                 }
-                pw.println(totalDistance);
+                pw.println(totalDistance + "," + legSteps);
             }
 
             pw.flush();
