@@ -8,11 +8,13 @@ import java.util.ResourceBundle;
 public class DirectionQuery {
 
 
-
-
+        private TransitRoutingPreference transitRouting;
+        private TravelMode travelMode;
         private ResourceBundle rb;
 
-        public DirectionQuery(ResourceBundle rb) {
+        public DirectionQuery(ResourceBundle rb, TravelMode travelMode, TransitRoutingPreference transitRouting) {
+            this.transitRouting = transitRouting;
+            this.travelMode = travelMode;
             this.rb=rb;
         }
 
@@ -24,7 +26,8 @@ public class DirectionQuery {
 
                 directionsResult = DirectionsApi.newRequest(context)
                         .units(Unit.METRIC)
-                        .mode(TravelMode.TRANSIT)
+                        .mode(travelMode)
+                        .transitRoutingPreference(transitRouting)
                         .origin(origin)
                         .departureTime(timeOfDay)
                         .destination(destination).await();
